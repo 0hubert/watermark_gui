@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, colorchooser
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 import os
 
@@ -93,7 +93,7 @@ class WatermarkApp:
         options_frame.grid(row=3, column=0, pady=20)
         
         # Opacity slider
-        ttk.Label(options_frame, text="Opacity:").grid(row=0, column=0)
+        ttk.Label(options_frame, text="Opacity:").grid(row=0, column=0, padx=5)
         self.opacity_var = tk.DoubleVar(value=50)
         self.opacity_slider = ttk.Scale(
             options_frame,
@@ -102,7 +102,51 @@ class WatermarkApp:
             variable=self.opacity_var,
             orient="horizontal"
         )
-        self.opacity_slider.grid(row=0, column=1)
+        self.opacity_slider.grid(row=0, column=1, padx=5)
+        
+        # Color picker
+        ttk.Label(options_frame, text="Color:").grid(row=1, column=0, padx=5, pady=10)
+        
+        # Color preview and button frame
+        color_frame = ttk.Frame(options_frame)
+        color_frame.grid(row=1, column=1, pady=10)
+        
+        # Color preview label
+        self.color_preview = tk.Label(
+            color_frame,
+            width=3,
+            height=1,
+            bg='black'  # Default color
+        )
+        self.color_preview.grid(row=0, column=0, padx=5)
+        
+        # Color picker button
+        self.color_button = ttk.Button(
+            color_frame,
+            text="Choose Color",
+            command=self.choose_color
+        )
+        self.color_button.grid(row=0, column=1, padx=5)
+        
+        # Store the current color (default: black)
+        self.current_color = '#000000'
+    
+    def choose_color(self):
+        """Open color picker dialog and update preview"""
+        color = colorchooser.askcolor(
+            title="Choose Watermark Color",
+            color=self.current_color
+        )
+        
+        if color[1]:  # If a color was chosen (not cancelled)
+            self.current_color = color[1]
+            self.color_preview.configure(bg=self.current_color)
+            
+            # Update status
+            self.status_label.config(
+                text=f"Color updated to {self.current_color}",
+                foreground="green"
+            )
     
     def upload_image(self):
         """Handle image upload functionality"""
@@ -188,15 +232,16 @@ class WatermarkApp:
             x = (watermarked.width - text_width) // 2
             y = (watermarked.height - text_height) // 2
             
-            # Calculate opacity
+            # Convert hex color to RGB and add opacity
+            r, g, b = tuple(int(self.current_color[1:][i:i+2], 16) for i in (0, 2, 4))
             opacity = int(255 * (self.opacity_var.get() / 100))
             
-            # Draw watermark text
+            # Draw watermark text with selected color
             draw.text(
                 (x, y),
                 watermark_text,
                 font=font,
-                fill=(0, 0, 0, opacity)
+                fill=(r, g, b, opacity)
             )
             
             # Save the watermarked image
