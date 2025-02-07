@@ -130,6 +130,62 @@ class WatermarkApp:
         
         # Store the current color (default: black)
         self.current_color = '#000000'
+        
+        # Position selector
+        ttk.Label(options_frame, text="Position:").grid(row=2, column=0, padx=5, pady=10)
+        
+        # Position frame
+        position_frame = ttk.Frame(options_frame)
+        position_frame.grid(row=2, column=1, pady=10)
+        
+        # Position radio buttons
+        self.position_var = tk.StringVar(value="center")
+        positions = [
+            ("Center", "center"),
+            ("Top Left", "top_left"),
+            ("Top Right", "top_right"),
+            ("Bottom Left", "bottom_left"),
+            ("Bottom Right", "bottom_right"),
+            ("Custom", "custom")
+        ]
+        
+        # Create radio buttons in a grid layout
+        for i, (text, value) in enumerate(positions):
+            rb = ttk.Radiobutton(
+                position_frame,
+                text=text,
+                value=value,
+                variable=self.position_var,
+                command=self.toggle_custom_position
+            )
+            rb.grid(row=i//2, column=i%2, padx=5, pady=2, sticky="w")
+        
+        # Custom position frame (initially hidden)
+        self.custom_pos_frame = ttk.Frame(options_frame)
+        self.custom_pos_frame.grid(row=3, column=0, columnspan=2, pady=5)
+        
+        # X position
+        ttk.Label(self.custom_pos_frame, text="X (%):").grid(row=0, column=0, padx=5)
+        self.x_pos_var = tk.StringVar(value="50")
+        self.x_pos_entry = ttk.Entry(
+            self.custom_pos_frame,
+            textvariable=self.x_pos_var,
+            width=5
+        )
+        self.x_pos_entry.grid(row=0, column=1, padx=5)
+        
+        # Y position
+        ttk.Label(self.custom_pos_frame, text="Y (%):").grid(row=0, column=2, padx=5)
+        self.y_pos_var = tk.StringVar(value="50")
+        self.y_pos_entry = ttk.Entry(
+            self.custom_pos_frame,
+            textvariable=self.y_pos_var,
+            width=5
+        )
+        self.y_pos_entry.grid(row=0, column=3, padx=5)
+        
+        # Initially hide custom position inputs
+        self.custom_pos_frame.grid_remove()
     
     def choose_color(self):
         """Open color picker dialog and update preview"""
@@ -228,9 +284,13 @@ class WatermarkApp:
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
             
-            # Calculate position (centered)
-            x = (watermarked.width - text_width) // 2
-            y = (watermarked.height - text_height) // 2
+            # Get position based on user selection
+            x, y = self.get_watermark_position(
+                text_width,
+                text_height,
+                watermarked.width,
+                watermarked.height
+            )
             
             # Convert hex color to RGB and add opacity
             r, g, b = tuple(int(self.current_color[1:][i:i+2], 16) for i in (0, 2, 4))
@@ -267,6 +327,61 @@ class WatermarkApp:
                 text=f"Error applying watermark: {str(e)}",
                 foreground="red"
             )
+    
+    def toggle_custom_position(self):
+        """Show/hide custom position inputs based on selection"""
+        if self.position_var.get() == "custom":
+            self.custom_pos_frame.grid()
+        else:
+            self.custom_pos_frame.grid_remove()
+    
+    def get_watermark_position(self, text_width, text_height, image_width, image_height):
+        """Calculate watermark position based on selected option"""
+        position = self.position_var.get()
+        padding = 20  # Padding from edges
+        
+        try:
+            if position == "custom":
+                # Get percentage values and convert to actual positions
+                x_percent = float(self.x_pos_var.get())
+                y_percent = float(self.y_pos_var.get())
+                
+                # Clamp values between 0 and 100
+                x_percent = max(0, min(100, x_percent))
+                y_percent = max(0, min(100, y_percent))
+                
+                x = int((image_width - text_width) * (x_percent / 100))
+                y = int((image_height - text_height) * (y_percent / 100))
+            else:
+                positions = {
+                    "center": (
+                        (image_width - text_width) // 2,
+                        (image_height - text_height) // 2
+                    ),
+                    "top_left": (
+                        padding,
+                        padding
+                    ),
+                    "top_right": (
+                        image_width - text_width - padding,
+                        padding
+                    ),
+                    "bottom_left": (
+                        padding,
+                        image_height - text_height - padding
+                    ),
+                    "bottom_right": (
+                        image_width - text_width - padding,
+                        image_height - text_height - padding
+                    )
+                }
+                x, y = positions[position]
+            
+            return x, y
+            
+        except ValueError:
+            # If there's an error parsing custom values, default to center
+            return (image_width - text_width) // 2, (image_height - text_height) // 2
     
     def run(self):
         """Start the application"""
