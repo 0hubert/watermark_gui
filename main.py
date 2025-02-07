@@ -9,8 +9,8 @@ class WatermarkApp:
         self.window = tk.Tk()
         self.window.title("Image Watermark Tool")
         
-        # Make the window size reasonable
-        self.window.geometry("800x600")
+        # Make the window size larger to accommodate bigger preview
+        self.window.geometry("1024x900")
         
         # Use a dyslexic-friendly color scheme
         # Light cream background is easier on the eyes
@@ -28,19 +28,24 @@ class WatermarkApp:
         main_frame = ttk.Frame(self.window, padding="20")
         main_frame.grid(row=0, column=0, sticky="nsew")
         
-        # Configure grid weights to make the preview area expandable
+        # Configure grid weights to make the layout flexible
         self.window.grid_rowconfigure(0, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
-        main_frame.grid_columnconfigure(0, weight=1)
+        main_frame.grid_rowconfigure(0, weight=1)
+        main_frame.grid_columnconfigure(1, weight=1)  # Give weight to preview column
+        
+        # Create left frame for controls
+        controls_frame = ttk.Frame(main_frame)
+        controls_frame.grid(row=0, column=0, sticky="n", padx=(0, 20))
         
         # Style configuration for dyslexic-friendly reading
         style = ttk.Style()
-        style.configure("TLabel", font=("Arial", 12))  # Clear, sans-serif font
+        style.configure("TLabel", font=("Arial", 12))
         style.configure("TButton", font=("Arial", 12))
         
         # Upload button section
         self.upload_button = ttk.Button(
-            main_frame,
+            controls_frame,
             text="Upload Image",
             command=self.upload_image
         )
@@ -48,28 +53,24 @@ class WatermarkApp:
         
         # Watermark text entry section
         self.watermark_label = ttk.Label(
-            main_frame,
+            controls_frame,
             text="Enter your watermark text:"
         )
         self.watermark_label.grid(row=1, column=0, pady=10)
         
         self.watermark_entry = ttk.Entry(
-            main_frame,
+            controls_frame,
             width=40,
             font=("Arial", 12)
         )
         self.watermark_entry.grid(row=2, column=0, pady=10)
         
         # Watermark options section
-        self.create_watermark_options(main_frame)
-        
-        # Add image preview area
-        self.preview_label = ttk.Label(main_frame)
-        self.preview_label.grid(row=6, column=0, pady=10)
+        self.create_watermark_options(controls_frame)
         
         # Apply watermark button
         self.apply_button = ttk.Button(
-            main_frame,
+            controls_frame,
             text="Apply Watermark",
             command=self.apply_watermark
         )
@@ -77,11 +78,21 @@ class WatermarkApp:
         
         # Status message display
         self.status_label = ttk.Label(
-            main_frame,
+            controls_frame,
             text="",
-            wraplength=500  # Prevent long text from extending window
+            wraplength=500
         )
         self.status_label.grid(row=5, column=0, pady=10)
+        
+        # Create right frame for preview
+        preview_frame = ttk.Frame(main_frame)
+        preview_frame.grid(row=0, column=1, sticky="nsew")
+        
+        # Add image preview area
+        self.preview_label = ttk.Label(preview_frame)
+        self.preview_label.grid(row=0, column=0, sticky="nsew")
+        preview_frame.grid_rowconfigure(0, weight=1)
+        preview_frame.grid_columnconfigure(0, weight=1)
     
     def create_watermark_options(self, parent):
         # Options frame for watermark customization
@@ -239,8 +250,8 @@ class WatermarkApp:
     def update_preview(self):
         """Update the preview of the image"""
         if self.current_image:
-            # Calculate preview size (max 400px width/height)
-            preview_size = (400, 400)
+            # Calculate preview size (max 800px width/height)
+            preview_size = (800, 800)
             preview_image = self.current_image.copy()
             preview_image.thumbnail(preview_size)
             
