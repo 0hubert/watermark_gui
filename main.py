@@ -8,13 +8,15 @@ class WatermarkApp:
         # Create the main window
         self.window = tk.Tk()
         self.window.title("Image Watermark Tool")
+        self.window.geometry("1200x900")  # Slightly wider for better spacing
         
-        # Make the window size larger to accommodate bigger preview
-        self.window.geometry("1024x900")
+        # Use a modern color scheme
+        self.bg_color = '#F0F4F8'  # Light blue-grey background
+        self.accent_color = '#1A73E8'  # Google blue
+        self.window.configure(bg=self.bg_color)
         
-        # Use a dyslexic-friendly color scheme
-        # Light cream background is easier on the eyes
-        self.window.configure(bg='#FFF4E6')
+        # Configure the style
+        self.setup_styles()
         
         # Initialize variables
         self.image_path = None
@@ -23,47 +25,99 @@ class WatermarkApp:
         # Create the user interface
         self.setup_ui()
     
+    def setup_styles(self):
+        """Configure custom styles for widgets"""
+        style = ttk.Style()
+        style.configure(
+            "Custom.TFrame",
+            background=self.bg_color
+        )
+        
+        # Modern button style
+        style.configure(
+            "Custom.TButton",
+            font=("Arial", 11),
+            padding=10,
+            background=self.accent_color
+        )
+        
+        # Label style
+        style.configure(
+            "Custom.TLabel",
+            font=("Arial", 11),
+            background=self.bg_color,
+            padding=5
+        )
+        
+        # Entry style
+        style.configure(
+            "Custom.TEntry",
+            padding=8
+        )
+        
+        # Options frame style
+        style.configure(
+            "Custom.TLabelframe",
+            background=self.bg_color,
+            padding=15
+        )
+        
+        style.configure(
+            "Custom.TLabelframe.Label",
+            font=("Arial", 11, "bold"),
+            background=self.bg_color,
+            foreground=self.accent_color
+        )
+        
+        # Scale style
+        style.configure(
+            "Custom.Horizontal.TScale",
+            background=self.bg_color
+        )
+    
     def setup_ui(self):
         # Create main container with padding
-        main_frame = ttk.Frame(self.window, padding="20")
+        main_frame = ttk.Frame(self.window, padding="30", style="Custom.TFrame")
         main_frame.grid(row=0, column=0, sticky="nsew")
         
-        # Configure grid weights to make the layout flexible
+        # Configure grid weights
         self.window.grid_rowconfigure(0, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
         main_frame.grid_rowconfigure(0, weight=1)
-        main_frame.grid_columnconfigure(1, weight=1)  # Give weight to preview column
+        main_frame.grid_columnconfigure(1, weight=1)
         
-        # Create left frame for controls
-        controls_frame = ttk.Frame(main_frame)
-        controls_frame.grid(row=0, column=0, sticky="n", padx=(0, 20))
-        
-        # Style configuration for dyslexic-friendly reading
-        style = ttk.Style()
-        style.configure("TLabel", font=("Arial", 12))
-        style.configure("TButton", font=("Arial", 12))
+        # Create left frame for controls with a border
+        controls_frame = ttk.Frame(
+            main_frame,
+            padding="25",
+            style="Custom.TFrame"
+        )
+        controls_frame.grid(row=0, column=0, sticky="n", padx=(0, 30))
         
         # Upload button section
         self.upload_button = ttk.Button(
             controls_frame,
             text="Upload Image",
-            command=self.upload_image
+            command=self.upload_image,
+            style="Custom.TButton"
         )
-        self.upload_button.grid(row=0, column=0, pady=20)
+        self.upload_button.grid(row=0, column=0, pady=(0, 25), sticky="ew")
         
         # Watermark text entry section
         self.watermark_label = ttk.Label(
             controls_frame,
-            text="Enter your watermark text:"
+            text="Enter your watermark text:",
+            style="Custom.TLabel"
         )
-        self.watermark_label.grid(row=1, column=0, pady=10)
+        self.watermark_label.grid(row=1, column=0, pady=(0, 5), sticky="w")
         
         self.watermark_entry = ttk.Entry(
             controls_frame,
-            width=40,
-            font=("Arial", 12)
+            width=35,
+            font=("Arial", 11),
+            style="Custom.TEntry"
         )
-        self.watermark_entry.grid(row=2, column=0, pady=10)
+        self.watermark_entry.grid(row=2, column=0, pady=(0, 25), sticky="ew")
         
         # Watermark options section
         self.create_watermark_options(controls_frame)
@@ -72,24 +126,34 @@ class WatermarkApp:
         self.apply_button = ttk.Button(
             controls_frame,
             text="Apply Watermark",
-            command=self.apply_watermark
+            command=self.apply_watermark,
+            style="Custom.TButton"
         )
-        self.apply_button.grid(row=4, column=0, pady=20)
+        self.apply_button.grid(row=4, column=0, pady=25, sticky="ew")
         
         # Status message display
         self.status_label = ttk.Label(
             controls_frame,
             text="",
-            wraplength=500
+            wraplength=400,
+            style="Custom.TLabel"
         )
         self.status_label.grid(row=5, column=0, pady=10)
         
-        # Create right frame for preview
-        preview_frame = ttk.Frame(main_frame)
+        # Create right frame for preview with a subtle border
+        preview_frame = ttk.Frame(
+            main_frame,
+            padding="2",
+            style="Custom.TFrame"
+        )
         preview_frame.grid(row=0, column=1, sticky="nsew")
         
-        # Add image preview area
-        self.preview_label = ttk.Label(preview_frame)
+        # Add image preview area with a placeholder message
+        self.preview_label = ttk.Label(
+            preview_frame,
+            text="Preview will appear here",
+            style="Custom.TLabel"
+        )
         self.preview_label.grid(row=0, column=0, sticky="nsew")
         preview_frame.grid_rowconfigure(0, weight=1)
         preview_frame.grid_columnconfigure(0, weight=1)
@@ -99,43 +163,54 @@ class WatermarkApp:
         options_frame = ttk.LabelFrame(
             parent,
             text="Watermark Options",
-            padding="10"
+            padding="20",
+            style="Custom.TLabelframe"
         )
-        options_frame.grid(row=3, column=0, pady=20)
+        options_frame.grid(row=3, column=0, pady=(0, 20), sticky="ew")
         
         # Opacity slider
-        ttk.Label(options_frame, text="Opacity:").grid(row=0, column=0, padx=5)
+        ttk.Label(
+            options_frame,
+            text="Opacity:",
+            style="Custom.TLabel"
+        ).grid(row=0, column=0, padx=5, sticky="w")
+        
         self.opacity_var = tk.DoubleVar(value=50)
         self.opacity_slider = ttk.Scale(
             options_frame,
             from_=0,
             to=100,
             variable=self.opacity_var,
-            orient="horizontal"
+            orient="horizontal",
+            style="Custom.Horizontal.TScale"
         )
-        self.opacity_slider.grid(row=0, column=1, padx=5)
+        self.opacity_slider.grid(row=0, column=1, padx=5, sticky="ew")
         
-        # Color picker
-        ttk.Label(options_frame, text="Color:").grid(row=1, column=0, padx=5, pady=10)
+        # Color picker section
+        ttk.Label(
+            options_frame,
+            text="Color:",
+            style="Custom.TLabel"
+        ).grid(row=1, column=0, padx=5, pady=15, sticky="w")
         
-        # Color preview and button frame
-        color_frame = ttk.Frame(options_frame)
-        color_frame.grid(row=1, column=1, pady=10)
+        color_frame = ttk.Frame(options_frame, style="Custom.TFrame")
+        color_frame.grid(row=1, column=1, pady=15, sticky="w")
         
-        # Color preview label
         self.color_preview = tk.Label(
             color_frame,
             width=3,
             height=1,
-            bg='black'  # Default color
+            bg='black',
+            relief="solid",
+            borderwidth=1
         )
         self.color_preview.grid(row=0, column=0, padx=5)
         
-        # Color picker button
         self.color_button = ttk.Button(
             color_frame,
             text="Choose Color",
-            command=self.choose_color
+            command=self.choose_color,
+            style="Custom.TButton"
         )
         self.color_button.grid(row=0, column=1, padx=5)
         
@@ -143,7 +218,11 @@ class WatermarkApp:
         self.current_color = '#000000'
         
         # Position selector
-        ttk.Label(options_frame, text="Position:").grid(row=2, column=0, padx=5, pady=10)
+        ttk.Label(
+            options_frame,
+            text="Position:",
+            style="Custom.TLabel"
+        ).grid(row=2, column=0, padx=5, pady=(15,5), sticky="w")
         
         # Position frame
         position_frame = ttk.Frame(options_frame)
